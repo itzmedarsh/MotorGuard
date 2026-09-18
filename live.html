@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MotorGuard</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <aside class="sidebar">
+
+            <div class="logo">
+                <div class="logo-icon">⚙</div>
+
+                <div>
+                    <h2>Flux</h2>
+                    <span>INDUSTRIAL AI</span>
+                </div>
+            </div>
+
+            <nav>
+
+                <a href="./web.html">
+                    Dashboard
+                </a>
+
+                <a href="./live.html" class="active">
+                    Live Monitoring
+                </a>
+
+                <a href="./history.html">
+                    Fault History
+                </a>
+
+                <a href="./analytics.html">
+                    Analytics
+                </a>
+
+            </nav>
+
+            <div class="connection">
+                <span class="dot" id="connection-dot"></span>
+                <span id="connection-text">CHECKING...</span>
+            </div>
+
+        </aside>
+        <main class="main">
+
+            <header>
+
+                <div>
+
+                    <p class="eyebrow">
+                        REAL-TIME MONITORING
+                    </p>
+
+                    <h1>
+                        Live Motor Monitoring
+                    </h1>
+
+                    <p class="subtitle">
+                        Real-time industrial sensor telemetry
+                    </p>
+
+                </div>
+
+                <div class="system-status">
+
+                    <span class="status-dot"></span>
+
+                    <span id="systemStatus">
+                        SYSTEM ONLINE
+                    </span>
+
+                </div>
+
+            </header>
+
+            <section class="status-card normal" id="statusCard">
+
+                <div class="status-left">
+
+                    <div class="big-status" id="motorStatus">
+                        WAITING
+                    </div>
+
+                    <p id="statusDescription">
+                        Waiting for ESP32 sensor data
+                    </p>
+
+                </div>
+
+                <div class="status-icon" id="statusIcon">
+                </div>
+
+            </section>
+            <section class="sensor-grid">
+                <div class="sensor-card">
+
+                    <div class="sensor-top">
+
+                        <span class="sensor-label">
+                            TEMPERATURE
+                        </span>
+
+                    </div>
+
+                    <div class="sensor-value">
+
+                        <span id="temperature">
+                            0.0
+                        </span>
+
+                        <small>°C</small>
+
+                    </div>
+
+                    <div class="sensor-state" id="temperatureState">
+                        OFFLINE
+                    </div>
+
+                </div>
+
+                <div class="sensor-card">
+
+                    <div class="sensor-top">
+
+                        <span>Amps</span>
+
+                        <span class="sensor-label">
+                            CURRENT
+                        </span>
+
+                    </div>
+
+                    <div class="sensor-value">
+
+                        <span id="current">
+                            0.00
+                        </span>
+
+                        <small>A</small>
+
+                    </div>
+
+                    <div class="sensor-state" id="currentState">
+                        OFFLINE
+                    </div>
+
+                </div>
+                <div class="sensor-card">
+
+                    <div class="sensor-top">
+
+
+                        <span class="sensor-label">
+                            RPM
+                        </span>
+
+                    </div>
+
+                    <div class="sensor-value">
+
+                        <span id="rpm">
+                            0
+                        </span>
+
+                        <small>RPM</small>
+
+                    </div>
+
+                    <div class="sensor-state" id="rpmState">
+                        OFFLINE
+                    </div>
+
+                </div>
+
+
+                <!-- VIBRATION -->
+
+                <div class="sensor-card">
+
+                    <div class="sensor-top">
+
+                        <span class="sensor-label">
+                            VIBRATION
+                        </span>
+
+                    </div>
+
+                    <div class="sensor-value">
+
+                        <span id="vibration">
+                            0.00
+                        </span>
+
+                        <small>RMS</small>
+
+                    </div>
+
+                    <div class="sensor-state" id="vibrationState">
+                        OFFLINE
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- LIVE READINGS -->
+
+            <section class="ai-card">
+
+                <div class="ai-header">
+
+                    <div>
+
+                        <p class="eyebrow">
+                            LIVE TELEMETRY
+                        </p>
+
+                        <h2>
+                            Current Sensor Data
+                        </h2>
+
+                    </div>
+
+                    <div class="ai-badge">
+                        ESP32
+                    </div>
+
+                </div>
+
+
+                <div class="diagnosis">
+
+                    <div>
+
+                        <span class="label">
+                            TEMPERATURE
+                        </span>
+
+                        <strong id="liveTemperature">
+                            0.0 °C
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="label">
+                            CURRENT
+                        </span>
+
+                        <strong id="liveCurrent">
+                            0.00 A
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="label">
+                            RPM
+                        </span>
+
+                        <strong id="liveRPM">
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="label">
+                            VIBRATION
+                        </span>
+
+                        <strong id="liveVibration">
+                            0.00 RMS
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <footer>
+                MotorGuard • Real-time Industrial Monitoring
+            </footer>
+
+        </main>
+
+    </div>
+
+
+    <script>
+
+        /* =========================================
+           ELEMENTS
+        ========================================= */
+
+        const temperatureElement =
+            document.getElementById("temperature");
+
+        const currentElement =
+            document.getElementById("current");
+
+        const rpmElement =
+            document.getElementById("rpm");
+
+        const vibrationElement =
+            document.getElementById("vibration");
+
+
+        const connectionDot =
+            document.getElementById("connection-dot");
+
+        const connectionText =
+            document.getElementById("connection-text");
+
+
+        const statusCard =
+            document.getElementById("statusCard");
+
+        const motorStatus =
+            document.getElementById("motorStatus");
+
+        const statusDescription =
+            document.getElementById("statusDescription");
+
+        const statusIcon =
+            document.getElementById("statusIcon");
+
+
+        const temperatureState =
+            document.getElementById("temperatureState");
+
+        const currentState =
+            document.getElementById("currentState");
+
+        const rpmState =
+            document.getElementById("rpmState");
+
+        const vibrationState =
+            document.getElementById("vibrationState");
+
+
+        const liveTemperature =
+            document.getElementById("liveTemperature");
+
+        const liveCurrent =
+            document.getElementById("liveCurrent");
+
+        const liveRPM =
+            document.getElementById("liveRPM");
+
+        const liveVibration =
+            document.getElementById("liveVibration");
+
+
+        const systemStatus =
+            document.getElementById("systemStatus");
+
+
+        let lastDataReceived = 0;
+
+
+        /* =========================================
+           WEBSOCKET
+        ========================================= */
+
+        const socket =
+            new WebSocket("ws://localhost:8765");
+
+
+        /* =========================================
+           DATA RECEIVED
+        ========================================= */
+
+        socket.onmessage = (event) => {
+
+            const data =
+                JSON.parse(event.data);
+
+
+            console.log(
+                "📡 LIVE DATA:",
+                data
+            );
+
+
+            lastDataReceived =
+                Date.now();
+
+
+            const temperature =
+                Number(data.temperature);
+
+            const current =
+                Number(data.current);
+
+            const rpm =
+                Number(data.rpm);
+
+            const vibration =
+                Number(data.vibration);
+
+
+            /* =====================================
+               CONNECTION
+            ===================================== */
+
+            connectionText.textContent =
+                "ESP32 Connected";
+
+            connectionDot.style.background = "";
+
+            systemStatus.textContent =
+                "SYSTEM ONLINE";
+
+
+            /* =====================================
+               SENSOR VALUES
+            ===================================== */
+
+            temperatureElement.textContent =
+                temperature.toFixed(1);
+
+            currentElement.textContent =
+                current.toFixed(2);
+
+            rpmElement.textContent =
+                rpm;
+
+            vibrationElement.textContent =
+                vibration.toFixed(2);
+
+
+            /* =====================================
+               LIVE TELEMETRY
+            ===================================== */
+
+            liveTemperature.textContent =
+                temperature.toFixed(1) + " °C";
+
+            liveCurrent.textContent =
+                current.toFixed(2) + " A";
+
+            liveRPM.textContent =
+                rpm;
+
+            liveVibration.textContent =
+                vibration.toFixed(2) + " RMS";
+
+
+            /* =====================================
+               SENSOR STATES
+            ===================================== */
+
+            temperatureState.textContent =
+                "LIVE";
+
+            currentState.textContent =
+                "LIVE";
+
+            rpmState.textContent =
+                "LIVE";
+
+            vibrationState.textContent =
+                "LIVE";
+
+
+            /* =====================================
+               SIMPLE LIVE STATUS
+            ===================================== */
+
+            if (vibration >= 1.5 && current >= 1.5) {
+
+                statusCard.className =
+                    "status-card danger";
+
+                motorStatus.textContent =
+                    "CRITICAL";
+
+                statusDescription.textContent =
+                    "High vibration and excessive current detected";
+
+                statusIcon.textContent =
+                    "⚠";
+
+            }
+
+            else if (vibration >= 1.5) {
+
+                statusCard.className =
+                    "status-card danger";
+
+                motorStatus.textContent =
+                    "HIGH VIBRATION";
+
+                statusDescription.textContent =
+                    "Vibration has exceeded the safe threshold";
+
+                statusIcon.textContent =
+                    "⚠";
+
+            }
+
+            else if (current >= 1.5) {
+
+                statusCard.className =
+                    "status-card danger";
+
+                motorStatus.textContent =
+                    "OVERCURRENT";
+
+                statusDescription.textContent =
+                    "Current has exceeded the safe threshold";
+
+                statusIcon.textContent =
+                    "⚠";
+
+            }
+
+            else if (temperature >= 60) {
+
+                statusCard.className =
+                    "status-card danger";
+
+                motorStatus.textContent =
+                    "OVERHEAT";
+
+                statusDescription.textContent =
+                    "Temperature has exceeded the safe threshold";
+
+                statusIcon.textContent =
+                    "⚠";
+
+            }
+
+            else {
+
+                statusCard.className =
+                    "status-card normal";
+
+                motorStatus.textContent =
+                    "NORMAL";
+
+                statusDescription.textContent =
+                    "Motor operating within normal parameters";
+
+                statusIcon.textContent =
+                    "✓";
+
+            }
+
+        };
+
+
+        /* =========================================
+           ESP32 OFFLINE
+        ========================================= */
+
+        setInterval(() => {
+
+            if (
+                Date.now() - lastDataReceived > 3000
+            ) {
+
+                connectionDot.style.background =
+                    "#777";
+
+                connectionText.textContent =
+                    "ESP32 Disconnected";
+
+                systemStatus.textContent =
+                    "SYSTEM OFFLINE";
+
+
+                /* Reset values */
+
+                temperatureElement.textContent =
+                    "0.0";
+
+                currentElement.textContent =
+                    "0.00";
+
+                rpmElement.textContent =
+                    "0";
+
+                vibrationElement.textContent =
+                    "0.00";
+
+
+                /* Reset telemetry */
+
+                liveTemperature.textContent =
+                    "0.0 °C";
+
+                liveCurrent.textContent =
+                    "0.00 A";
+
+                liveRPM.textContent =
+                    "0";
+
+                liveVibration.textContent =
+                    "0.00 RMS";
+
+
+                /* Sensor states */
+
+                temperatureState.textContent =
+                    "OFFLINE";
+
+                currentState.textContent =
+                    "OFFLINE";
+
+                rpmState.textContent =
+                    "OFFLINE";
+
+                vibrationState.textContent =
+                    "OFFLINE";
+
+
+                /* Main status */
+
+                statusCard.className =
+                    "status-card danger";
+
+                motorStatus.textContent =
+                    "OFFLINE";
+
+                statusDescription.textContent =
+                    "ESP32 is disconnected";
+
+                statusIcon.textContent =
+                    "✕";
+
+            }
+
+        }, 1000);
+
+
+        /* =========================================
+           WEBSOCKET ERROR
+        ========================================= */
+
+        socket.onerror = () => {
+
+            connectionDot.style.background =
+                "#777";
+
+            connectionText.textContent =
+                "ESP32 Disconnected";
+
+        };
+
+
+        /* =========================================
+           WEBSOCKET CLOSED
+        ========================================= */
+
+        socket.onclose = () => {
+
+            connectionDot.style.background =
+                "#777";
+
+            connectionText.textContent =
+                "ESP32 Disconnected";
+
+        };
+
+    </script>
+
+</body>
+
+</html>

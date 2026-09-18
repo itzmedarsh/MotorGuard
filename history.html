@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MotorGuard | Fault History</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <div class="logo">
+                <div class="logo-icon">⚙</div>
+
+                <div>
+                    <h2>Flux</h2>
+                    <span>INDUSTRIAL AI</span>
+                </div>
+            </div>
+
+            <nav>
+                <a href="./web.html">Dashboard</a>
+                <a href="./live.html">Live Monitoring</a>
+                <a href="./history.html" class="active">Fault History</a>
+                <a href="./analytics.html">Analytics</a>
+            </nav>
+
+            <div class="connection">
+                <span class="dot" id="connection-dot"></span>
+                <span id="connection-text">CHECKING...</span>
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN CONTENT -->
+        <main class="main">
+
+            <header>
+
+                <div>
+                    <p class="eyebrow">INDUSTRIAL SYSTEM</p>
+
+                    <h1>Fault History</h1>
+
+                    <p class="subtitle">
+                        Recorded motor condition events
+                    </p>
+                </div>
+
+                <div class="system-status">
+                    <span class="status-dot"></span>
+                    FAULT MONITORING
+                </div>
+
+            </header>
+
+
+            <!-- SUMMARY CARDS -->
+            <section class="sensor-grid">
+
+                <div class="sensor-card">
+
+                    <div class="sensor-top">
+                        <span>⚠</span>
+                        <span class="sensor-label">
+                            TOTAL FAULTS
+                        </span>
+                    </div>
+
+                    <div class="sensor-value">
+                        <span id="totalFaults">0</span>
+                    </div>
+
+                </div>
+
+
+                <div class="sensor-card">
+
+                    <div class="sensor-top">
+                        <span>〰</span>
+                        <span class="sensor-label">
+                            VIBRATION
+                        </span>
+                    </div>
+
+                    <div class="sensor-value">
+                        <span id="vibrationFaults">0</span>
+                    </div>
+
+                </div>
+
+
+                <div class="sensor-card">
+
+                    <div class="sensor-top">
+                        <span>⚡</span>
+                        <span class="sensor-label">
+                            OVERCURRENT
+                        </span>
+                    </div>
+
+                    <div class="sensor-value">
+                        <span id="currentFaults">0</span>
+                    </div>
+
+                </div>
+
+
+                <div class="sensor-card">
+
+                    <div class="sensor-top">
+                        <span>🌡</span>
+                        <span class="sensor-label">
+                            OVERHEAT
+                        </span>
+                    </div>
+
+                    <div class="sensor-value">
+                        <span id="overheatFaults">0</span>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- HISTORY -->
+            <section class="ai-card">
+
+                <div class="ai-header">
+
+                    <div>
+                        <p class="eyebrow">
+                            EVENT LOG
+                        </p>
+
+                        <h2>
+                            Detected Faults
+                        </h2>
+                    </div>
+
+                    <button id="clearButton" style="
+                        background:#111;
+                        color:white;
+                        border:1px solid #444;
+                        padding:10px 18px;
+                        border-radius:8px;
+                        cursor:pointer;
+                    ">
+                        Clear History
+                    </button>
+
+                </div>
+
+
+                <!-- TABLE -->
+                <div style="
+                width:100%;
+                overflow-x:auto;
+                margin-top:25px;
+            ">
+
+                    <table style="
+                    width:100%;
+                    min-width:800px;
+                    border-collapse:collapse;
+                ">
+
+                        <thead>
+
+                            <tr style="
+                            border-bottom:1px solid #333;
+                            color:#888;
+                            text-align:left;
+                        ">
+
+                                <th style="padding:15px;">
+                                    TIME
+                                </th>
+
+                                <th style="padding:15px;">
+                                    FAULT
+                                </th>
+
+                                <th style="padding:15px;">
+                                    VIBRATION
+                                </th>
+
+                                <th style="padding:15px;">
+                                    CURRENT
+                                </th>
+
+                                <th style="padding:15px;">
+                                    TEMPERATURE
+                                </th>
+
+                                <th style="padding:15px;">
+                                    RPM
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="faultTable">
+
+                            <tr>
+
+                                <td colspan="6" style="
+                                    padding:50px;
+                                    text-align:center;
+                                    color:#777;
+                                ">
+                                    No faults recorded yet
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+            <footer>
+                MotorGuard • Industrial Fault Monitoring
+            </footer>
+
+        </main>
+
+    </div>
+
+
+    <script>
+
+        /* =====================================
+           CONNECTION
+        ===================================== */
+
+        const connectionDot =
+            document.getElementById("connection-dot");
+
+        const connectionText =
+            document.getElementById("connection-text");
+
+        let lastDataReceived = 0;
+
+
+        /* =====================================
+           WEBSOCKET
+        ===================================== */
+
+        const socket =
+            new WebSocket("ws://localhost:8765");
+
+
+        socket.onopen = () => {
+
+            console.log("WebSocket connected");
+
+        };
+
+
+        socket.onmessage = (event) => {
+
+            const data =
+                JSON.parse(event.data);
+
+            console.log("ESP32:", data);
+
+            lastDataReceived =
+                Date.now();
+
+            connectionText.textContent =
+                "ESP32 Connected";
+
+            connectionDot.style.background = "";
+
+        };
+
+
+        socket.onerror = () => {
+
+            connectionText.textContent =
+                "ESP32 Disconnected";
+
+            connectionDot.style.background =
+                "#777";
+
+        };
+
+
+        socket.onclose = () => {
+
+            connectionText.textContent =
+                "ESP32 Disconnected";
+
+            connectionDot.style.background =
+                "#777";
+
+        };
+
+
+        setInterval(() => {
+
+            if (
+                Date.now() - lastDataReceived > 3000
+            ) {
+
+                connectionText.textContent =
+                    "ESP32 Disconnected";
+
+                connectionDot.style.background =
+                    "#777";
+
+            }
+
+        }, 1000);
+
+
+        /* =====================================
+           FAULT HISTORY
+        ===================================== */
+
+        const faultTable =
+            document.getElementById("faultTable");
+
+
+        function getHistory() {
+
+            return JSON.parse(
+                localStorage.getItem(
+                    "motorFaultHistory"
+                ) || "[]"
+            );
+
+        }
+
+
+        /* =====================================
+           DISPLAY HISTORY
+        ===================================== */
+
+        function displayHistory() {
+
+            const history =
+                getHistory();
+
+
+            /* SUMMARY */
+
+            document.getElementById(
+                "totalFaults"
+            ).textContent =
+                history.length;
+
+
+            document.getElementById(
+                "vibrationFaults"
+            ).textContent =
+                history.filter(
+                    item =>
+                        item.fault === "HIGH VIBRATION"
+                ).length;
+
+
+            document.getElementById(
+                "currentFaults"
+            ).textContent =
+                history.filter(
+                    item =>
+                        item.fault === "OVERCURRENT"
+                ).length;
+
+
+            document.getElementById(
+                "overheatFaults"
+            ).textContent =
+                history.filter(
+                    item =>
+                        item.fault === "OVERHEAT"
+                ).length;
+
+
+            /* NO DATA */
+
+            if (history.length === 0) {
+
+                faultTable.innerHTML = `
+            <tr>
+                <td
+                    colspan="6"
+                    style="
+                        padding:50px;
+                        text-align:center;
+                        color:#777;
+                    "
+                >
+                    No faults recorded yet
+                </td>
+            </tr>
+        `;
+
+                return;
+            }
+
+
+            /* CLEAR TABLE */
+
+            faultTable.innerHTML = "";
+
+
+            /* NEWEST FIRST */
+
+            history
+                .slice()
+                .reverse()
+                .forEach(item => {
+
+                    const row =
+                        document.createElement("tr");
+
+
+                    row.style.borderBottom =
+                        "1px solid #242830";
+
+
+                    row.innerHTML = `
+
+                <td style="padding:15px;">
+                    ${item.time}
+                </td>
+
+                <td style="
+                    padding:15px;
+                    color:#ff4545;
+                    font-weight:600;
+                ">
+                    ${item.fault}
+                </td>
+
+                <td style="padding:15px;">
+                    ${item.vibration}
+                </td>
+
+                <td style="padding:15px;">
+                    ${item.current}
+                </td>
+
+                <td style="padding:15px;">
+                    ${item.temperature} °C
+                </td>
+
+                <td style="padding:15px;">
+                    ${item.rpm}
+                </td>
+
+            `;
+
+
+                    faultTable.appendChild(row);
+
+                });
+
+        }
+
+
+        /* =====================================
+           CLEAR HISTORY
+        ===================================== */
+
+        document
+            .getElementById("clearButton")
+            .addEventListener("click", () => {
+
+                localStorage.removeItem(
+                    "motorFaultHistory"
+                );
+
+                displayHistory();
+
+            });
+
+
+        /* =====================================
+           START
+        ===================================== */
+
+        displayHistory();
+
+
+        setInterval(
+            displayHistory,
+            1000
+        );
+
+    </script>
+
+</body>
+
+</html>
