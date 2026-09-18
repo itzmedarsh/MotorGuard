@@ -144,45 +144,23 @@ function updateMotorStatus(prediction, vibration, current, temperature, rpm) {
    WEBSOCKET
 ================================= */
 
-const socket = new WebSocket("ws://172.21.8.112:8765");
+const socketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+const socket = new WebSocket(
+    `${socketProtocol}://${window.location.host}/ws`
+);
 
-const connectionDot = document.getElementById("connection-dot");
 const connectionText = document.getElementById("connection-text");
 
 socket.onopen = () => {
-
-    console.log("✅ Connected to Python WebSocket");
-
-    if (connectionDot) {
-        connectionDot.style.background = "";
-    }
-
-    if (connectionText) {
-        connectionText.textContent = "SYSTEM ONLINE";
-    }
-
+    connectionText.textContent = "SYSTEM ONLINE";
 };
 
 socket.onclose = () => {
-
-    console.log("❌ WebSocket disconnected");
-
-    if (connectionDot) {
-        connectionDot.style.background = "";
-    }
-
-    if (connectionText) {
-        connectionText.textContent = "SYSTEM OFFLINE";
-    }
-
+    connectionText.textContent = "SYSTEM OFFLINE";
 };
 
 socket.onerror = () => {
-
-    if (connectionText) {
-        connectionText.textContent = "SYSTEM OFFLINE";
-    }
-
+    connectionText.textContent = "SYSTEM OFFLINE";
 };
 
 /* =================================
