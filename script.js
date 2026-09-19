@@ -30,8 +30,8 @@ const currentNeedle =
 let lastDataReceived = 0;
 let previousFault = "NORMAL";
 const VIBRATION_THRESHOLD = 0.35;
-const CURRENT_THRESHOLD = 1.50;
-const TEMPERATURE_THRESHOLD = 60.0;
+const CURRENT_THRESHOLD = 0.31;
+const TEMPERATURE_THRESHOLD = 50.0;
 
 function saveFault(fault, vibration, current, temperature, rpm) {
 
@@ -141,7 +141,7 @@ function updateMotorStatus(
         fault = "OVERCURRENT";
 
         description =
-            "Current has exceeded 1.50 A";
+            "Current has exceeded 0.31 A";
     }
 
     else if (temperature >= TEMPERATURE_THRESHOLD) {
@@ -149,7 +149,7 @@ function updateMotorStatus(
         fault = "OVERHEAT";
 
         description =
-            "Temperature has exceeded 60 °C";
+            "Temperature has exceeded 50 °C";
     }
 
     // =================================
