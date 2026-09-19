@@ -53,7 +53,7 @@
                 <span class="dot" id="connection-dot"></span>
 
                 <span id="connection-text">
-                    ESP32 Connected
+                    CHECKING...
                 </span>
 
             </div>
@@ -84,7 +84,7 @@
 
 
                 <div class="system-status">
-                    <span id="analytics-status">ANALYTICS OFFLINE</span>
+                    <span id="analytics-status">CHECKING...</span>
                 </div>
 
             </header>
@@ -384,10 +384,14 @@
 
     <script>
 
-        /*WEBSOCKET*/
+        /* WEBSOCKET */
+
+        const socketProtocol =
+            window.location.protocol === "https:" ? "wss" : "ws";
 
         const socket =
-            new WebSocket("ws://localhost:8765");
+            new WebSocket(`${socketProtocol}://${window.location.host}/ws`);
+
 
         const connectionDot =
             document.getElementById("connection-dot");
@@ -395,8 +399,12 @@
         const connectionText =
             document.getElementById("connection-text");
 
+        const analyticsStatus =
+            document.getElementById("analytics-status");
+
 
         let lastDataReceived = 0;
+
 
         const liveIndicators = [
             document.getElementById("temp-live"),
@@ -405,29 +413,98 @@
             document.getElementById("rpm-live")
         ];
 
+
         let temperatures = [];
-
         let currents = [];
-
         let rpms = [];
-
         let vibrations = [];
 
 
         let normalCount = 0;
-
         let vibrationFaultCount = 0;
-
         let currentFaultCount = 0;
-
         let overheatCount = 0;
+
+
+        /* CONNECTION STATUS */
+
+        socket.onopen = () => {
+
+            console.log("✅ Connected to MotorGuard server");
+
+            if (connectionDot) {
+                connectionDot.style.background = "";
+            }
+
+            if (connectionText) {
+                connectionText.textContent =
+                    "SYSTEM ONLINE";
+            }
+
+            if (analyticsStatus) {
+                analyticsStatus.textContent =
+                    "ANALYTICS ONLINE";
+            }
+        };
+
+
+        socket.onerror = () => {
+
+            console.log("❌ WebSocket error");
+
+            if (connectionDot) {
+                connectionDot.style.background = "#777";
+            }
+
+            if (connectionText) {
+                connectionText.textContent =
+                    "SYSTEM OFFLINE";
+            }
+
+            if (analyticsStatus) {
+                analyticsStatus.textContent =
+                    "ANALYTICS OFFLINE";
+            }
+        };
+
+
+        socket.onclose = () => {
+
+            console.log("❌ WebSocket disconnected");
+
+            if (connectionDot) {
+                connectionDot.style.background = "#777";
+            }
+
+            if (connectionText) {
+                connectionText.textContent =
+                    "SYSTEM OFFLINE";
+            }
+
+            if (analyticsStatus) {
+                analyticsStatus.textContent =
+                    "ANALYTICS OFFLINE";
+            }
+
+            liveIndicators.forEach(indicator => {
+
+                if (indicator) {
+                    indicator.textContent =
+                        "● OFFLINE";
+
+                    indicator.style.color =
+                        "#777";
+                }
+
+            });
+        };
+
 
         function createChart(id, label) {
 
             return new Chart(
                 document.getElementById(id),
                 {
-
                     type: "line",
 
                     data: {
@@ -476,6 +553,7 @@
 
                 }
             );
+
         }
 
 
@@ -505,6 +583,7 @@
                 "rpmChart",
                 "RPM"
             );
+
 
         function addChartData(
             chart,
@@ -536,12 +615,12 @@
         }
 
 
-
         function average(array) {
 
             if (array.length === 0) {
                 return 0;
             }
+
 
             const total =
                 array.reduce(
@@ -549,9 +628,11 @@
                     0
                 );
 
+
             return total / array.length;
 
         }
+
 
         socket.onmessage = (event) => {
 
@@ -567,11 +648,18 @@
 
             lastDataReceived =
                 Date.now();
+
+
             liveIndicators.forEach(indicator => {
 
                 if (indicator) {
-                    indicator.textContent = "● LIVE";
-                    indicator.style.color = "#4ade80";
+
+                    indicator.textContent =
+                        "● LIVE";
+
+                    indicator.style.color =
+                        "#4ade80";
+
                 }
 
             });
@@ -587,7 +675,15 @@
             if (connectionText) {
 
                 connectionText.textContent =
-                    "ESP32 Connected";
+                    "SYSTEM ONLINE";
+
+            }
+
+
+            if (analyticsStatus) {
+
+                analyticsStatus.textContent =
+                    "ANALYTICS ONLINE";
 
             }
 
@@ -674,6 +770,7 @@
                 rpm
             );
 
+
             if (
                 vibration >= 1.5
             ) {
@@ -737,24 +834,47 @@
 
         };
 
+
         setInterval(() => {
 
-            if (Date.now() - lastDataReceived > 3000) {
+            if (
+                Date.now() - lastDataReceived > 3000
+            ) {
 
                 if (connectionDot) {
-                    connectionDot.style.background = "#777";
+
+                    connectionDot.style.background =
+                        "#777";
+
                 }
 
+
                 if (connectionText) {
+
                     connectionText.textContent =
-                        "ESP32 Disconnected";
+                        "SYSTEM OFFLINE";
+
                 }
+
+
+                if (analyticsStatus) {
+
+                    analyticsStatus.textContent =
+                        "ANALYTICS OFFLINE";
+
+                }
+
 
                 liveIndicators.forEach(indicator => {
 
                     if (indicator) {
-                        indicator.textContent = "● OFFLINE";
-                        indicator.style.color = "#777";
+
+                        indicator.textContent =
+                            "● OFFLINE";
+
+                        indicator.style.color =
+                            "#777";
+
                     }
 
                 });
@@ -763,47 +883,4 @@
 
         }, 1000);
 
-        socket.onerror = () => {
-
-            if (connectionDot) {
-
-                connectionDot.style.background =
-                    "#777";
-
-            }
-
-
-            if (connectionText) {
-
-                connectionText.textContent =
-                    "ESP32 Disconnected";
-
-            }
-
-        };
-
-
-        socket.onclose = () => {
-
-            if (connectionDot) {
-
-                connectionDot.style.background =
-                    "#777";
-
-            }
-
-
-            if (connectionText) {
-
-                connectionText.textContent =
-                    "ESP32 Disconnected";
-
-            }
-
-        };
-
     </script>
-
-</body>
-
-</html>
