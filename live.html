@@ -382,9 +382,13 @@
            WEBSOCKET
         ========================================= */
 
-        const socket =
-            new WebSocket("ws://localhost:8765");
+        const socketProtocol =
+            window.location.protocol === "https:" ? "wss" : "ws";
 
+        const socket =
+            new WebSocket(
+                `${socketProtocol}://${window.location.host}/ws`
+            );
 
         /* =========================================
            DATA RECEIVED
@@ -424,7 +428,7 @@
             ===================================== */
 
             connectionText.textContent =
-                "ESP32 Connected";
+                "SYSTEM ONLINE";
 
             connectionDot.style.background = "";
 
@@ -584,7 +588,7 @@
                     "#777";
 
                 connectionText.textContent =
-                    "ESP32 Disconnected";
+                    "SYSTEM OFFLINE";
 
                 systemStatus.textContent =
                     "SYSTEM OFFLINE";
@@ -664,7 +668,7 @@
                 "#777";
 
             connectionText.textContent =
-                "ESP32 Disconnected";
+                "SYSTEM OFFLINE";
 
         };
 
