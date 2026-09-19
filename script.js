@@ -29,12 +29,13 @@ const currentNeedle =
 
 let lastDataReceived = 0;
 let previousFault = "NORMAL";
+
+
 function saveFault(fault, vibration, current, temperature, rpm) {
 
     const history = JSON.parse(
         localStorage.getItem("motorFaultHistory") || "[]"
     );
-
 
     const now = new Date();
 
@@ -43,54 +44,50 @@ function saveFault(fault, vibration, current, temperature, rpm) {
         " " +
         now.toLocaleTimeString();
 
-
     history.push({
-
         time: time,
-
         fault: fault,
-
         vibration: Number(vibration).toFixed(2),
-
         current: Number(current).toFixed(2),
-
         temperature: Number(temperature).toFixed(1),
-
         rpm: rpm
-
     });
 
-
-    /*
-       Keep latest 100 events
-    */
-
+    // Keep latest 100 events
     if (history.length > 100) {
         history.shift();
     }
-
 
     localStorage.setItem(
         "motorFaultHistory",
         JSON.stringify(history)
     );
-
 }
+
 
 /* =================================
    UPDATE GAUGE
 ================================= */
 
 function updateGauge(value, needle, valueElement) {
-    const limitedValue = Math.max(0, Math.min(2, Number(value) || 0));
+
+    const limitedValue = Math.max(
+        0,
+        Math.min(2, Number(value) || 0)
+    );
 
     // 0.0 = LEFT
     // 1.0 = TOP
     // 2.0 = RIGHT
-    const angle = -180 + (limitedValue / 2) * 180;
 
-    needle.style.transform = `rotate(${angle}deg)`;
-    valueElement.textContent = limitedValue.toFixed(2);
+    const angle =
+        -180 + (limitedValue / 2) * 180;
+
+    needle.style.transform =
+        `rotate(${angle}deg)`;
+
+    valueElement.textContent =
+        limitedValue.toFixed(2);
 }
 
 
@@ -98,7 +95,13 @@ function updateGauge(value, needle, valueElement) {
    UPDATE MOTOR STATUS
 ================================= */
 
-function updateMotorStatus(prediction, vibration, current, temperature, rpm) {
+function updateMotorStatus(
+    prediction,
+    vibration,
+    current,
+    temperature,
+    rpm
+) {
 
     const fault = prediction;
 
@@ -108,18 +111,21 @@ function updateMotorStatus(prediction, vibration, current, temperature, rpm) {
     // Normal
     if (fault === "NORMAL") {
 
-        statusCard.className = "status-card normal";
+        statusCard.className =
+            "status-card normal";
+
         statusIcon.textContent = "✓";
 
         statusDescription.textContent =
             "Motor operating within normal parameters";
-
     }
 
     // Fault
     else {
 
-        statusCard.className = "status-card danger";
+        statusCard.className =
+            "status-card danger";
+
         statusIcon.textContent = "!";
 
         statusDescription.textContent =
@@ -127,6 +133,7 @@ function updateMotorStatus(prediction, vibration, current, temperature, rpm) {
 
         // Save to fault history
         if (fault !== previousFault) {
+
             saveFault(
                 fault,
                 vibration,
@@ -140,150 +147,173 @@ function updateMotorStatus(prediction, vibration, current, temperature, rpm) {
     previousFault = fault;
 }
 
+
 /* =================================
    WEBSOCKET
 ================================= */
 
-const socketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-const socket = new WebSocket(
-    `${socketProtocol}://${window.location.host}/ws`
-);
+// Automatically uses:
+// Local HTTP  -> ws://
+// Render HTTPS -> wss://
 
-const connectionText = document.getElementById("connection-text");
+const socketProtocol =
+    window.location.protocol === "https:"
+        ? "wss"
+        : "ws";
+
+const socket =
+    new WebSocket(
+        `${socketProtocol}://${window.location.host}/ws`
+    );
+
 
 socket.onopen = () => {
-    connectionText.textContent = "SYSTEM ONLINE";
+
+    console.log("✅ Connected to MotorGuard server");
+
+    if (connectionDot) {
+        connectionDot.style.background = "";
+    }
+
+    if (connectionText) {
+        connectionText.textContent =
+            "SYSTEM ONLINE";
+    }
 };
 
-socket.onclose = () => {
-    connectionText.textContent = "SYSTEM OFFLINE";
-};
 
-socket.onerror = () => {
-    connectionText.textContent = "SYSTEM OFFLINE";
-};
+socket.onmessage = (event) => {
 
-/* =================================
-   CONVERT VALUES TO NUMBERS
-================================= */
+    try {
 
-const temperature = Number(data.temperature);
-const current = Number(data.current);
-const rpm = Number(data.rpm);
-const vibration = Number(data.vibration);
+        const data = JSON.parse(event.data);
 
+        lastDataReceived = Date.now();
 
-/* =================================
-   CONNECTION
-================================= */
+        /* =================================
+           CONNECTION
+        ================================= */
 
-if (connectionDot) {
+        if (connectionDot) {
+            connectionDot.style.background = "";
+        }
 
-    connectionDot.style.background = "";
-
-}
-
-if (connectionText) {
-
-    connectionText.textContent =
-        "ESP32 Connected";
-
-}
+        if (connectionText) {
+            connectionText.textContent =
+                "SYSTEM ONLINE";
+        }
 
 
-/* =================================
-   SENSOR VALUES
-================================= */
+        /* =================================
+           CONVERT VALUES TO NUMBERS
+        ================================= */
 
-if (temperatureElement) {
+        const temperature =
+            Number(data.temperature);
 
-    temperatureElement.textContent =
-        temperature.toFixed(1);
+        const current =
+            Number(data.current);
 
-}
+        const rpm =
+            Number(data.rpm);
 
-
-if (currentElement) {
-
-    currentElement.textContent =
-        current.toFixed(2);
-
-}
+        const vibration =
+            Number(data.vibration);
 
 
-if (rpmElement) {
+        /* =================================
+           SENSOR VALUES
+        ================================= */
 
-    rpmElement.textContent =
-        rpm;
+        if (temperatureElement) {
 
-}
-
-
-if (vibrationElement) {
-
-    vibrationElement.textContent =
-        vibration.toFixed(2);
-
-}
+            temperatureElement.textContent =
+                temperature.toFixed(1);
+        }
 
 
-/* =================================
-   GAUGES
-================================= */
+        if (currentElement) {
 
-updateGauge(
-    vibration,
-    vibrationNeedle,
-    vibrationGaugeValue
-);
+            currentElement.textContent =
+                current.toFixed(2);
+        }
 
 
-updateGauge(
-    current,
-    currentNeedle,
-    currentGaugeValue
-);
+        if (rpmElement) {
+
+            rpmElement.textContent =
+                rpm;
+        }
 
 
-/* =================================
-   MOTOR STATUS
-================================= */
+        if (vibrationElement) {
 
-updateMotorStatus(
-    data.prediction,
-    data.vibration,
-    data.current,
-    data.temperature,
-    data.rpm
-);
+            vibrationElement.textContent =
+                vibration.toFixed(2);
+        }
 
 
-/* =================================
-   AI PREDICTION
-================================= */
+        /* =================================
+           GAUGES
+        ================================= */
 
-if (
-    predictionElement &&
-    data.prediction
-) {
+        updateGauge(
+            vibration,
+            vibrationNeedle,
+            vibrationGaugeValue
+        );
 
-    predictionElement.textContent =
-        data.prediction;
+        updateGauge(
+            current,
+            currentNeedle,
+            currentGaugeValue
+        );
 
-}
+
+        /* =================================
+           MOTOR STATUS
+        ================================= */
+
+        updateMotorStatus(
+            data.prediction,
+            data.vibration,
+            data.current,
+            data.temperature,
+            data.rpm
+        );
 
 
-/* =================================
-   LAST UPDATED
-================================= */
+        /* =================================
+           AI PREDICTION
+        ================================= */
 
-if (updatedElement) {
+        if (
+            predictionElement &&
+            data.prediction
+        ) {
 
-    updatedElement.textContent =
-        "Just now";
+            predictionElement.textContent =
+                data.prediction;
+        }
 
-}
 
+        /* =================================
+           LAST UPDATED
+        ================================= */
+
+        if (updatedElement) {
+
+            updatedElement.textContent =
+                "Just now";
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ Invalid WebSocket data:",
+            error
+        );
+    }
 };
 
 
@@ -293,33 +323,63 @@ if (updatedElement) {
 
 setInterval(() => {
 
-    if (Date.now() - lastDataReceived > 3000) {
+    if (
+        Date.now() - lastDataReceived > 3000
+    ) {
 
         if (connectionDot) {
 
             connectionDot.style.background =
                 "#777";
-
         }
 
         if (connectionText) {
 
             connectionText.textContent =
-                "ESP32 Disconnected";
-
-            temperatureElement.textContent = "0.0";
-            currentElement.textContent = "0.00";
-            rpmElement.textContent = "0";
-            vibrationElement.textContent = "0.00";
-
-            updateGauge(0, vibrationNeedle, vibrationGaugeValue);
-            updateGauge(0, currentNeedle, currentGaugeValue);
-
-            motorStatus.textContent = "OFFLINE";
-            statusDescription.textContent = "ESP32 is disconnected";
-            statusIcon.textContent = "✕";
+                "SYSTEM OFFLINE";
         }
 
+        if (temperatureElement) {
+            temperatureElement.textContent = "0.0";
+        }
+
+        if (currentElement) {
+            currentElement.textContent = "0.00";
+        }
+
+        if (rpmElement) {
+            rpmElement.textContent = "0";
+        }
+
+        if (vibrationElement) {
+            vibrationElement.textContent = "0.00";
+        }
+
+        updateGauge(
+            0,
+            vibrationNeedle,
+            vibrationGaugeValue
+        );
+
+        updateGauge(
+            0,
+            currentNeedle,
+            currentGaugeValue
+        );
+
+        if (motorStatus) {
+            motorStatus.textContent =
+                "OFFLINE";
+        }
+
+        if (statusDescription) {
+            statusDescription.textContent =
+                "System is disconnected";
+        }
+
+        if (statusIcon) {
+            statusIcon.textContent = "✕";
+        }
     }
 
 }, 1000);
@@ -337,16 +397,13 @@ socket.onerror = () => {
 
         connectionDot.style.background =
             "#777";
-
     }
 
     if (connectionText) {
 
         connectionText.textContent =
-            "ESP32 Disconnected";
-
+            "SYSTEM OFFLINE";
     }
-
 };
 
 
@@ -362,14 +419,11 @@ socket.onclose = () => {
 
         connectionDot.style.background =
             "#777";
-
     }
 
     if (connectionText) {
 
         connectionText.textContent =
-            "ESP32 Disconnected";
-
+            "SYSTEM OFFLINE";
     }
-
 };
