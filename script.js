@@ -29,7 +29,9 @@ const currentNeedle =
 
 let lastDataReceived = 0;
 let previousFault = "NORMAL";
-
+const VIBRATION_THRESHOLD = 0.35;
+const CURRENT_THRESHOLD = 1.50;
+const TEMPERATURE_THRESHOLD = 60.0;
 
 function saveFault(fault, vibration, current, temperature, rpm) {
 
@@ -103,12 +105,69 @@ function updateMotorStatus(
     rpm
 ) {
 
-    const fault = prediction;
+    vibration = Number(vibration);
+    current = Number(current);
+    temperature = Number(temperature);
+
+    let fault = "NORMAL";
+    let description =
+        "Motor operating within normal parameters";
+
+    // =================================
+    // SAFETY THRESHOLDS
+    // =================================
+
+    if (
+        vibration >= VIBRATION_THRESHOLD &&
+        current >= CURRENT_THRESHOLD
+    ) {
+
+        fault = "CRITICAL";
+
+        description =
+            "High vibration and excessive current detected";
+    }
+
+    else if (vibration >= VIBRATION_THRESHOLD) {
+
+        fault = "HIGH VIBRATION";
+
+        description =
+            "Vibration has exceeded 0.35 g";
+    }
+
+    else if (current >= CURRENT_THRESHOLD) {
+
+        fault = "OVERCURRENT";
+
+        description =
+            "Current has exceeded 1.50 A";
+    }
+
+    else if (temperature >= TEMPERATURE_THRESHOLD) {
+
+        fault = "OVERHEAT";
+
+        description =
+            "Temperature has exceeded 60 °C";
+    }
+
+    // =================================
+    // MOTOR STATUS
+    // =================================
 
     motorStatus.textContent = fault;
-    predictionElement.textContent = fault;
 
-    // Normal
+    // Keep AI prediction separate
+    if (predictionElement) {
+        predictionElement.textContent =
+            prediction || "N/A";
+    }
+
+    // =================================
+    // NORMAL
+    // =================================
+
     if (fault === "NORMAL") {
 
         statusCard.className =
@@ -117,10 +176,13 @@ function updateMotorStatus(
         statusIcon.textContent = "✓";
 
         statusDescription.textContent =
-            "Motor operating within normal parameters";
+            description;
     }
 
-    // Fault
+    // =================================
+    // FAULT
+    // =================================
+
     else {
 
         statusCard.className =
@@ -129,9 +191,8 @@ function updateMotorStatus(
         statusIcon.textContent = "!";
 
         statusDescription.textContent =
-            "AI detected: " + fault;
+            description;
 
-        // Save to fault history
         if (fault !== previousFault) {
 
             saveFault(
