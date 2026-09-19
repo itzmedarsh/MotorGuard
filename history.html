@@ -257,18 +257,27 @@
 
         let lastDataReceived = 0;
 
-
         /* =====================================
            WEBSOCKET
         ===================================== */
 
+        const socketProtocol =
+            window.location.protocol === "https:" ? "wss" : "ws";
+
         const socket =
-            new WebSocket("ws://localhost:8765");
+            new WebSocket(
+                `${socketProtocol}://${window.location.host}/ws`
+            );
 
 
         socket.onopen = () => {
 
-            console.log("WebSocket connected");
+            console.log("✅ Connected to MotorGuard server");
+
+            connectionText.textContent =
+                "SYSTEM ONLINE";
+
+            connectionDot.style.background = "";
 
         };
 
@@ -278,13 +287,13 @@
             const data =
                 JSON.parse(event.data);
 
-            console.log("ESP32:", data);
+            console.log("MotorGuard:", data);
 
             lastDataReceived =
                 Date.now();
 
             connectionText.textContent =
-                "ESP32 Connected";
+                "SYSTEM ONLINE";
 
             connectionDot.style.background = "";
 
@@ -293,8 +302,10 @@
 
         socket.onerror = () => {
 
+            console.log("❌ WebSocket error");
+
             connectionText.textContent =
-                "ESP32 Disconnected";
+                "SYSTEM OFFLINE";
 
             connectionDot.style.background =
                 "#777";
@@ -304,8 +315,10 @@
 
         socket.onclose = () => {
 
+            console.log("❌ WebSocket disconnected");
+
             connectionText.textContent =
-                "ESP32 Disconnected";
+                "SYSTEM OFFLINE";
 
             connectionDot.style.background =
                 "#777";
@@ -320,7 +333,7 @@
             ) {
 
                 connectionText.textContent =
-                    "ESP32 Disconnected";
+                    "SYSTEM OFFLINE";
 
                 connectionDot.style.background =
                     "#777";
