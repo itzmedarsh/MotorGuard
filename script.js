@@ -133,7 +133,7 @@ function updateMotorStatus(
         fault = "HIGH VIBRATION";
 
         description =
-            "Vibration has exceeded 0.35 g";
+            "Vibration has exceeded 5.0 g";
     }
 
     else if (current >= CURRENT_THRESHOLD) {
