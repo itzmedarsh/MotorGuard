@@ -29,7 +29,7 @@ const currentNeedle =
 
 let lastDataReceived = 0;
 let previousFault = "NORMAL";
-const VIBRATION_THRESHOLD = 0.35;
+const VIBRATION_THRESHOLD = 5.0;
 const CURRENT_THRESHOLD = 0.31;
 const TEMPERATURE_THRESHOLD = 50.0;
 
